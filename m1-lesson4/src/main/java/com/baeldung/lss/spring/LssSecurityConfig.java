@@ -38,7 +38,7 @@ public class LssSecurityConfig {
                 .anyRequest().authenticated()
         
         .and()
-        .formLogin();
+        .formLogin().loginPage("/login").permitAll().loginProcessingUrl("/doLogin");
         return http.build();
     } // @formatter:on
 

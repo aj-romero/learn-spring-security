@@ -9,6 +9,8 @@ import org.springframework.core.convert.converter.Converter;
 import com.baeldung.lss.persistence.InMemoryUserRepository;
 import com.baeldung.lss.persistence.UserRepository;
 import com.baeldung.lss.web.model.User;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 @ComponentScan("com.baeldung.lss.web")
@@ -17,6 +19,11 @@ public class LssApp2 {
     @Bean
     public UserRepository userRepository() {
         return new InMemoryUserRepository();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -30,7 +37,7 @@ public class LssApp2 {
     }
 
     public static void main(String[] args) throws Exception {
-        SpringApplication.run(LssApp2.class, args);
+        SpringApplication.run(new Class[] { LssApp2.class, LssSecurityConfig.class }, args);
     }
 
 }
