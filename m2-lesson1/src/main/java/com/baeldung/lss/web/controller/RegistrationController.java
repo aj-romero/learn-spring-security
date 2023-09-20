@@ -1,17 +1,15 @@
 package com.baeldung.lss.web.controller;
 
+import com.baeldung.lss.service.IUserService;
+import com.baeldung.lss.validation.EmailExistsException;
+import com.baeldung.lss.web.model.User;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
-import com.baeldung.lss.service.IUserService;
-import com.baeldung.lss.validation.EmailExistsException;
-import com.baeldung.lss.web.model.User;
-
-import jakarta.validation.Valid;
 
 @Controller
 class RegistrationController {
@@ -32,11 +30,7 @@ class RegistrationController {
             return new ModelAndView("registrationPage", "user", user);
         }
         try {
-            user.setEnabled(false);
             userService.registerNewUser(user);
-
-           // final String token=
-
         } catch (EmailExistsException e) {
             result.addError(new FieldError("user", "email", e.getMessage()));
             return new ModelAndView("registrationPage", "user", user);

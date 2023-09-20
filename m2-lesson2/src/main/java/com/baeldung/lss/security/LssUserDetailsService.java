@@ -1,8 +1,8 @@
 package com.baeldung.lss.security;
 
-import java.util.Arrays;
-import java.util.Collection;
-
+import com.baeldung.lss.persistence.UserRepository;
+import com.baeldung.lss.web.model.User;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -11,10 +11,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.baeldung.lss.persistence.UserRepository;
-import com.baeldung.lss.web.model.User;
-
-import jakarta.transaction.Transactional;
+import java.util.Arrays;
+import java.util.Collection;
 
 @Service
 @Transactional
@@ -30,7 +28,7 @@ public class LssUserDetailsService implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("No user found with username: " + email);
         }
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), user.getEnabled(), true, true, true, getAuthorities(ROLE_USER));
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), true, true, true, true, getAuthorities(ROLE_USER));
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(String role) {

@@ -1,5 +1,7 @@
 package com.baeldung.lss.service;
 
+import com.baeldung.lss.model.PasswordResetToken;
+import com.baeldung.lss.persistence.PasswordResetTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,9 @@ class UserService implements IUserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private PasswordResetTokenRepository passwordTokenRepository;
     
     //
 
@@ -79,4 +84,20 @@ class UserService implements IUserService {
         return userRepository.save(user);
     }
 
+    @Override
+    public void createPasswordResetTokenForUser(final User user, final String token) {
+        final PasswordResetToken myToken = new PasswordResetToken(token, user);
+        passwordTokenRepository.save(myToken);
+    }
+
+    @Override
+    public PasswordResetToken getPasswordResetToken(final String token) {
+        return passwordTokenRepository.findByToken(token);
+    }
+
+    @Override
+    public void changeUserPassword(final User user, final String password) {
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+    }
 }

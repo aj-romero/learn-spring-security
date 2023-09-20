@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -14,6 +15,8 @@ import org.springframework.security.web.SecurityFilterChain;
 public class LssSecurityConfig {
 
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     public LssSecurityConfig(PasswordEncoder passwordEncoder) {
         super();
@@ -24,10 +27,8 @@ public class LssSecurityConfig {
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception { // @formatter:off 
-        auth.
-            inMemoryAuthentication().passwordEncoder(passwordEncoder).
-            withUser("user").password(passwordEncoder.encode("pass")).
-            roles("USER");
+        auth.userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder);
     } // @formatter:on
 
     @Bean

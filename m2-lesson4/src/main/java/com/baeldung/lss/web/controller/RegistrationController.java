@@ -1,15 +1,22 @@
 package com.baeldung.lss.web.controller;
 
 import java.util.Calendar;
+import java.util.UUID;
 
+import com.baeldung.lss.model.PasswordResetToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -18,6 +25,7 @@ import com.baeldung.lss.model.VerificationToken;
 import com.baeldung.lss.registration.OnRegistrationCompleteEvent;
 import com.baeldung.lss.service.IUserService;
 import com.baeldung.lss.validation.EmailExistsException;
+import com.google.common.collect.ImmutableMap;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -30,6 +38,12 @@ class RegistrationController {
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @Autowired
+    private Environment env;
 
     @RequestMapping(value = "signup")
     public ModelAndView registrationForm() {
@@ -74,6 +88,55 @@ class RegistrationController {
         user.setEnabled(true);
         userService.saveRegisteredUser(user);
         redirectAttributes.addFlashAttribute("message", "Your account verified successfully");
+        return new ModelAndView("redirect:/login");
+    }
+
+    @RequestMapping(value = "/user/resetPassword", method = RequestMethod.POST)
+    @ResponseBody
+    public ModelAndView resetPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail, final RedirectAttributes redirectAttributes) {
+        final User user = userService.findUserByEmail(userEmail);
+        if (user != null) {
+            final String token = UUID.randomUUID()
+                    .toString();
+            userService.createPasswordResetTokenForUser(user, token);
+            final String appUrl = "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+            final SimpleMailMessage email = constructResetTokenEmail(appUrl, token, user);
+            mailSender.send(email);
+        }
+
+        redirectAttributes.addFlashAttribute("message", "You should receive an Password Reset Email shortly");
+        return new ModelAndView("redirect:/login");
+    }
+
+    private SimpleMailMessage constructResetTokenEmail(final String contextPath, final String token, final User user) {
+        final String url = contextPath + "/user/changePassword?id=" + user.getId() + "&token=" + token;
+        final SimpleMailMessage email = new SimpleMailMessage();
+        email.setTo(user.getEmail());
+        email.setSubject("Reset Password");
+        email.setText("Please open the following URL to reset your password: \r\n" + url);
+        email.setFrom(env.getProperty("support.email"));
+        return email;
+    }
+
+    @RequestMapping(value = "/user/savePassword", method = RequestMethod.POST)
+    @ResponseBody
+    public ModelAndView savePassword(@RequestParam("password") final String password, @RequestParam("passwordConfirmation") final String passwordConfirmation, @RequestParam("token") final String token, final RedirectAttributes redirectAttributes) {
+
+        if (!password.equals(passwordConfirmation)) {
+            return new ModelAndView("resetPassword", ImmutableMap.of("errorMessage", "Passwords do not match"));
+        }
+        final PasswordResetToken p = userService.getPasswordResetToken(token);
+        if (p == null) {
+            redirectAttributes.addFlashAttribute("message", "Invalid token");
+        } else {
+            final User user = p.getUser();
+            if (user == null) {
+                redirectAttributes.addFlashAttribute("message", "Unknown user");
+            } else {
+                userService.changeUserPassword(user, password);
+                redirectAttributes.addFlashAttribute("message", "Password reset successfully");
+            }
+        }
         return new ModelAndView("redirect:/login");
     }
 

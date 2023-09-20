@@ -4,11 +4,7 @@ import java.util.Calendar;
 
 import com.baeldung.lss.validation.PasswordMatches;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 
@@ -30,6 +26,17 @@ public class User {
     @Transient
     @NotEmpty(message = "Password confirmation is required.")
     private String passwordConfirmation;
+
+    @Column
+    private Boolean enabled;
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
 
     private Calendar created = Calendar.getInstance();
 
